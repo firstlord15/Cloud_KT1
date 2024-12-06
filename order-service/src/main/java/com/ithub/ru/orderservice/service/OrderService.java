@@ -4,6 +4,7 @@ import com.ithub.ru.orderservice.exceptionHandler.ResourceNotFoundException;
 import com.ithub.ru.orderservice.models.Order;
 import com.ithub.ru.orderservice.models.OrderStatus;
 import com.ithub.ru.orderservice.repositories.OrderRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -12,17 +13,29 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
-
 public class OrderService {
     private final JdbcTemplate jdbcTemplate;
     private final OrderRepository orderRepository;
+    private final RestTemplate restTemplate;
 
-    public OrderService(OrderRepository orderRepository, JdbcTemplate jdbcTemplate) {
-        this.orderRepository = orderRepository;
+    public OrderService(JdbcTemplate jdbcTemplate, OrderRepository orderRepository, RestTemplate restTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.orderRepository = orderRepository;
+        this.restTemplate = restTemplate;
+    }
+
+    @CircuitBreaker(name = "yourCircuitBreaker", fallbackMethod = "fallbackMethod")
+    public String callYourService() {
+        return restTemplate.getForObject("http://order-service", String.class);
+    }
+
+    // Метод, который срабатывает при срабатывании CircuitBreaker
+    public String fallbackMethod(Exception ex) {
+        return "Fallback response due to service failure";
     }
 
     public long count () {

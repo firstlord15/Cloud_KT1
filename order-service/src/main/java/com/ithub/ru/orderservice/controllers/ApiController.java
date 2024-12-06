@@ -13,6 +13,7 @@ import java.text.MessageFormat;
 import java.util.List;
 
 @Slf4j
+@RestController
 public class ApiController {
     private final OrderService orderService;
 
@@ -42,7 +43,9 @@ public class ApiController {
     public ResponseEntity<Order> updateOrder(@PathVariable("id") long id, @Valid @RequestBody Order newOrder) {
         return orderService.updateById(id, newOrder)
                 .map(ResponseEntity::ok)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Order not found by id {0} or cannot update this order", id)));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        MessageFormat.format("Order not found by id {0}", id)
+                ));
     }
 
     @DeleteMapping("/api/order/{id}")
